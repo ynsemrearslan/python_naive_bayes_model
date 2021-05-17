@@ -22,7 +22,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 
-
+# Logların gösterildiği açılan pencere loglar model eğitimi sırasında logs.txt dosyasına yazılıp oradan okuma işlemleri yapılıyor.
 class LogWindow(tk.Toplevel):
     def __init__(self, master):
         super().__init__()
@@ -37,6 +37,7 @@ class LogWindow(tk.Toplevel):
             print(line)
         self.lb.pack(fill=tk.BOTH, expand=1)
 
+# Sıcaklık haritasının gösterildiği açılan pencere
 class HotMapWindow(tk.Toplevel):
     def __init__(self, master):
         super().__init__()
@@ -53,7 +54,8 @@ class HotMapWindow(tk.Toplevel):
         
         self.canvas = FigureCanvasTkAgg(figure, self)
         self.canvas.get_tk_widget().grid(row=0, column=0)
-        
+
+# Eğitim durumu grafik halinde gösteren açılır pencere
 class PredictedWindow(tk.Toplevel):
     def __init__(self, master):
         super().__init__()
@@ -76,19 +78,18 @@ class PredictModel(tk.Toplevel):
 
         
 
-
+# Main sınıfımız model eğitimi ve testi bu sınıfta gerçekleşiyor
 class Model(tk.Tk):
     def __init__(self):
-        
-        
         super().__init__()
 
-        self.title("Naïve Bayes Classifier in Python")
+        self.title("Naïve Bayes ile Sınıflandırma")
+        #Ekran boyutunun piksel olarak verilmesi
         self.geometry("500x300")
         self.resizable(False, False)
-
         self.standard_font = (None, 13)
 
+        # Üst menü tanımlamaları başlangıcı
         self.menubar = tk.Menu(self, bg="lightgrey", fg="black")
 
         self.log_menu = tk.Menu(self.menubar, tearoff=0, bg="lightgrey", fg="black")
@@ -115,26 +116,29 @@ class Model(tk.Tk):
         self.menubar.add_cascade(label="Predict", menu=self.predict_model)
         self.menubar.add_cascade(label="About", menu=self.about_menu)
 
-
         self.configure(menu=self.menubar)
+        # Üst menü tanımlamaları bitişi
 
         self.main_frame = tk.Frame(self, width=500, height=300, bg="lightgrey")
 
+        # Veri kümesinin yüzde olarak kullanıcı tarafından alınan değere göre bölünmesi sağlanıyor.
         self.task_name_label = tk.Label(self.main_frame, text="Veri kümesinin yüzde kaçı test verisi olarak kullanılsın.", bg="lightgrey", fg="black", font=self.standard_font)
         self.task_name_entry = tk.Entry(self.main_frame, bg="white", fg="black", font=self.standard_font)
         self.start_button = tk.Button(self.main_frame, text="Modeli Eğit",command=self.start, bg="lightgrey", fg="black",font=self.standard_font)
+
+        # Modelin eğitim ilerlemesi bir progress bar yardımıyla gösteriliyor.
         self.pb1 = Progressbar(self, orient=HORIZONTAL,length=100, mode='indeterminate')
         self.pb1.pack(expand=True)
         
+        # Eğitim sonucunun gösterildiği label
         self.train_label_text = tk.StringVar(self.main_frame)
         self.train_label_text.set(" ")
         self.train_label_text = tk.Label(self.main_frame,text='Train sonucu bekleniyor..',bg="lightgrey", fg="black", font=(None, 16))
         
-        
+        # Test sonucunun gösterildiği label
         self.test_label_text = tk.StringVar(self.main_frame)
         self.test_label_text.set(" ")
         self.test_label_text = tk.Label(self.main_frame,text='Test sonucu bekleniyor..',bg="lightgrey", fg="black", font=(None, 16))
-
         self.main_frame.pack(fill=tk.BOTH, expand=1)
 
         
@@ -150,10 +154,10 @@ class Model(tk.Tk):
         self.bind("<Control-p>",self.show_graph_predicted_window)
 
         
+    # Üst mendüde yer alan butonların işlemleri için fonksiyonlar
 
     def show_graph_hotmap_window(self,event=None):
         HotMapWindow(self)
-
     def show_log_window(self, event=None):
         LogWindow(self)
     def show_graph_predicted_window(self, event=None):
@@ -161,87 +165,95 @@ class Model(tk.Tk):
 
     def show_predict_window(self, event=None):
         PredictModel(self)
-
     def close(self,event=None):
         exit()
     
- 
- 
- 
+    # Model eğitimi için kullanılan fonksiyoun butona basıldığında model eğitimi başlıyor.
     def start(self):
         file2 = open(r".\logs.txt","w+")
         logsList=[]
         if not self.task_name_entry.get():
             msg.showerror("No Task", "Please enter a task name")
             return
-
+        # Model Eğitimi başladıktan sonra tekrar butona basılamaması için buton disable ediliyor.
         self.start_button.config(state=tk.DISABLED)
         self.task_name_entry.configure(state="disabled")
+
+        # Labela model eğitime başladı çıktısı veriliyor.
         self.start_button.configure(text="Model eğitimi başladı")
+
+
         #1--------------------------
+
+        # Kullanılacak dataset bir dataframe olarak okunuyor.
         data = './adult.csv'
         df = pd.read_csv(data, header=None, sep=',\s')
         #2--------------------------
+
+        # Sutun isimleri dataset içerinden bir diziye eklenmiştir. Okunan datasetin sutunlarının isimlendirilmesi için kullanılacak.
         col_names = ['age', 'workclass', 'fnlwgt', 'education', 'education_num', 'marital_status', 'occupation', 'relationship',
              'race', 'sex', 'capital_gain', 'capital_loss', 'hours_per_week', 'native_country', 'income']
+        
+        # Sutun isimleri okunan dataframe üzerine ekleniyor.
         df.columns = col_names
         print(df.columns)
         
+        # Progressbar ilerlemesi arttırılıyor
         self.update_idletasks()
         self.pb1['value'] += 20
-        #3--------------------------
-        categorical = [var for var in df.columns if df[var].dtype=='O']
-        #4--------------------------
-        df['workclass'].replace('?', np.NaN, inplace=True)
-        #5--------------------------
-        df['occupation'].replace('?', np.NaN, inplace=True)
-        #6--------------------------
-        df['native_country'].replace('?', np.NaN, inplace=True)
-
-        #7--------------------------
-        numerical = [var for var in df.columns if df[var].dtype!='O']
+        
+        
         #8--------------------------
+        # Hedef değişken income sütunu dataframe üzerinden silinerek X değişkenine atanıyor.
         X = df.drop(['income'], axis=1)
+        print(X)
 
+        # Hedef değişken income sütunu dataframe üzerinden seçilerek y değişkenine atanıyor.
         y = df['income']
         print(y)
+        # Arayüz üzerinden görüntülenmesi için y değişkeni logs.txt dosyasına yazılması için logsList listesine ekleniyor.
         logsList.append(y)
         #9--------------------------
+
+        # X ve y'yi eğitim ve test setlerine ayrılıyor.test_size yani test boyutu kullanıcı tarafından girilen değerin yüzdesi alınarak belirleniyor.
         from sklearn.model_selection import train_test_split
+        # X ve y X için hem eğitim hemde test ve y için hem eğitim hemde test olarak 4 parçaya ayrılıyor.
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = int(self.task_name_entry.get())/100, random_state = 0)
 
         #10--------------------------
         numerical = [col for col in X_train.columns if X_train[col].dtypes != 'O']
 
-        numerical
-        logsList.append(numerical)
-        #11--------------------------
-        numerical = [col for col in X_train.columns if X_train[col].dtypes != 'O']
+        logsList.append('X_train boyutu :')
+        logsList.append(X_train.shape)
 
-        numerical
-        logsList.append(numerical)
-        self.update_idletasks()
-        self.pb1['value'] += 20
-        #12--------------------------
-        #X_train[categorical].isnull().mean()
-        #13--------------------------
+        logsList.append('X_test boyutu :')
+        logsList.append(X_test.shape)
 
-       # for col in categorical:
-       #     if X_train[col].isnull().mean()>0:
-       #        print(col, (X_train[col].isnull().mean()))
-        
-        #14--------------------------
+        logsList.append(numerical)
+     
+
+
+        # Eksik kategorik değişkenleri en sık değere dayandırın
         for df2 in [X_train, X_test]:
             df2['workclass'].fillna(X_train['workclass'].mode()[0], inplace=True)
             df2['occupation'].fillna(X_train['occupation'].mode()[0], inplace=True)
             df2['native_country'].fillna(X_train['native_country'].mode()[0], inplace=True)
 
         #14--------------------------
+        # Arayüz üzerinden görüntülenmesi için y değişkeni logs.txt dosyasına yazılması için logsList listesine ekleniyor.
+        logsList.append(df2)
+        
+        # Progressbar ilerlemesi arttırılıyor
+        self.update_idletasks()
+        self.pb1['value'] += 20
+
+        # category_encoders : Kategorik değişkenleri farklı tekniklerle sayısal olarak kodlamak için bir dizi scikit-öğrenme tarzı dönüştürücü
         import category_encoders as ce
         #15--------------------------
         encoder = ce.OneHotEncoder(cols=['workclass', 'education', 'marital_status', 'occupation', 'relationship', 
                                  'race', 'sex', 'native_country'])
 
+        #İsteğe bağlı fit_params parametreleriyle transformatörü X ve y'ye uyar ve X'in dönüştürülmüş bir sürümünü döndürür 
         X_train = encoder.fit_transform(X_train)
 
         X_test = encoder.transform(X_test)
@@ -264,24 +276,37 @@ class Model(tk.Tk):
         X_train = pd.DataFrame(X_train, columns=[cols])
         #18--------------------------
         X_test = pd.DataFrame(X_test, columns=[cols])
-        #18--------------------------
+
+
+        # Naive Bayes Modeli Eğitimi
         from sklearn.naive_bayes import GaussianNB
-        #19--------------------------
+        
+        # Model nesnesi
         gnb = GaussianNB()
-        #20--------------------------
+
+        #Eğitim verileri
         gnb.fit(X_train, y_train)
         #21--------------------------
+
+        # Modelin test edilmesi
         y_pred = gnb.predict(X_test)
         
         print(y_pred)
+        # Arayüz üzerinden görüntülenmesi için y değişkeni logs.txt dosyasına yazılması için logsList listesine ekleniyor.
         logsList.append(y_pred)
 
-        #22--------------------------
+        # Metriklerin hesaplanması
+
         from sklearn.metrics import accuracy_score
 
         print('Model accuracy score: {0:0.4f}'. format(accuracy_score(y_test, y_pred)))
         file2.writelines('Model accuracy score: {0:0.4f}'. format(accuracy_score(y_test, y_pred)))
-        #23--------------------------
+        
+        # Burada, y_test gerçek sınıf etiketleridir ve y_pred, test kümesindeki tahmin edilen sınıf etiketleridir.
+
+
+        #Şimdi, aşırı uyumu kontrol etmek için tren seti ve test seti doğruluğunu karşılaştırma
+
         y_pred_train = gnb.predict(X_train)
 
         y_pred_train
@@ -292,6 +317,8 @@ class Model(tk.Tk):
         #25--------------------------
 
         print('Training set score: {:.4f}'.format(gnb.score(X_train, y_train)))
+
+        # Eğitim seti doğruluk puanı ile  test seti doğruluğu birbirine yakın değerse, bu iki değer oldukça karşılaştırılabilir deneri. Yani, aşırı uyum belirtisi olmaz.
         
         self.train_label_text.config(text='Training set score: {:.4f}'.format(gnb.score(X_train, y_train)))
         self.test_label_text.config(text='Test set score: {:.4f}'.format(gnb.score(X_test, y_test)))
@@ -299,16 +326,22 @@ class Model(tk.Tk):
 
         print('Test set score: {:.4f}'.format(gnb.score(X_test, y_test)))
 
-        #26--------------------------
-        null_accuracy = (7407/(7407+2362))
-        logsList.append('Null accuracy score: {0:0.4f}'. format(null_accuracy))
+        '''
+        Karışıklık matrisi, bir sınıflandırma algoritmasının performansını özetlemek için kullanılan bir araçtır.
+        Bir kafa karışıklığı matrisi, bize sınıflandırma modeli performansının ve modelin ürettiği hata türlerinin net bir resmini verecektir.
+        Gerçek Pozitifler (TP) - Gerçek Pozitifler, bir gözlemin belirli bir sınıfa ait olduğunu ve gözlemin aslında o sınıfa ait olduğunu tahmin ettiğimizde ortaya çıkar.
 
-        print('Null accuracy score: {0:0.4f}'. format(null_accuracy))
+        Gerçek Negatifler (TN) - Gerçek Negatifler, bir gözlemin belirli bir sınıfa ait olmadığını ve gözlemin aslında o sınıfa ait olmadığını tahmin ettiğimizde ortaya çıkar.
 
-        #27--------------------------
-        # Print the Confusion Matrix and slice it into four pieces
+        Yanlış Pozitifler (FP) - Yanlış Pozitifler, bir gözlemin belirli bir sınıfa ait olduğunu, ancak gözlemin aslında o sınıfa ait olmadığını tahmin ettiğimizde ortaya çıkar. 
+        Bu tür bir hataya Tip I hatası denir.
 
+        Yanlış Negatifler (FN) - Yanlış Negatifler, bir gözlemin belirli bir sınıfa ait olmadığını, ancak gözlemin aslında o sınıfa ait olduğunu tahmin ettiğimizde ortaya çıkar. 
+        Bu çok ciddi bir hatadır ve Tip II hatası olarak adlandırılır.
+        '''
         from sklearn.metrics import confusion_matrix
+
+        # Karışıklık Matrisini yazdırın ve dört parçaya bölün
 
         cm = confusion_matrix(y_test, y_pred)
 
@@ -327,6 +360,8 @@ class Model(tk.Tk):
         #28--------------------------
         from sklearn.metrics import classification_report
 
+        
+
         print(classification_report(y_test, y_pred))
         logsList.append(classification_report(y_test, y_pred))
         #29--------------------------
@@ -340,49 +375,75 @@ class Model(tk.Tk):
 
         classification_accuracy = (TP + TN) / float(TP + TN + FP + FN)
 
+        # sınıflandırma doğruluğu
+
         print('Classification accuracy : {0:0.4f}'.format(classification_accuracy))
         logsList.append('Classification accuracy : {0:0.4f}'.format(classification_accuracy))
         #31--------------------------
         classification_error = (FP + FN) / float(TP + TN + FP + FN)
 
+        # sınıflandırma hatası
         print('Classification error : {0:0.4f}'.format(classification_error))
         logsList.append('Classification error : {0:0.4f}'.format(classification_error))
         #32--------------------------
-        # print precision score
+        '''
+            Precision
+            Kesinlik, tahmin edilen tüm olumlu sonuçlardan doğru şekilde tahmin edilen olumlu sonuçların yüzdesi olarak tanımlanabilir. 
+            Gerçek pozitiflerin (TP) doğru ve yanlış pozitiflerin toplamına (TP + FP) oranı olarak verilebilir.
+
+        '''
         precision = TP / float(TP + FP)
         print('Precision : {0:0.4f}'.format(precision))
         logsList.append('Precision : {0:0.4f}'.format(precision))
+
+        '''
+        Recall
+
+        Geri çağırma, tüm gerçek olumlu sonuçlardan doğru şekilde tahmin edilen olumlu sonuçların yüzdesi olarak tanımlanabilir.
+        Gerçek pozitiflerin (TP), gerçek pozitiflerin ve yanlış negatiflerin (TP + FN) toplamına oranı olarak verilebilir.
+        Hatırlama aynı zamanda Hassasiyet olarak da adlandırılır.
+        '''
         #33--------------------------
+
+        # recall değeri
         recall = TP / float(TP + FN)
         print('Recall or Sensitivity : {0:0.4f}'.format(recall))
         logsList.append('Recall or Sensitivity : {0:0.4f}'.format(recall))
         #34--------------------------
+        # True Positive Rate değeri
         true_positive_rate = TP / float(TP + FN)
         print('True Positive Rate : {0:0.4f}'.format(true_positive_rate))
         logsList.append('True Positive Rate : {0:0.4f}'.format(true_positive_rate))
         #35--------------------------
-
+        # False Positive Rate değeri
         false_positive_rate = FP / float(FP + TN)
         print('False Positive Rate : {0:0.4f}'.format(false_positive_rate))
         logsList.append('False Positive Rate : {0:0.4f}'.format(false_positive_rate))
         #36--------------------------
+        # Specificity değeri
         specificity = TN / (TN + FP)
         print('Specificity : {0:0.4f}'.format(specificity))
         logsList.append('Specificity : {0:0.4f}'.format(specificity))
         #37--------------------------
+
+        # iki sınıfın tahmin edilen ilk 10 olasılığını yazdırın - 0 ve 1
         y_pred_prob = gnb.predict_proba(X_test)[0:10]
         print(y_pred_prob)
         logsList.append(y_pred_prob)
         #38--------------------------
+        # dataframe içerisinde olasılıkları saklayın
         y_pred_prob_df = pd.DataFrame(data=y_pred_prob, columns=['Prob of - <=50K', 'Prob of - >50K'])
         print(y_pred_prob_df)
         logsList.append(y_pred_prob_df)
         #39--------------------------
+
+        # 1. sınıf için tahmin edilen ilk 10 olasılığı yazdırın - Olasılık> 50K
         gnb.predict_proba(X_test)[0:10, 1]
 
         #40--------------------------
         # store the predicted probabilities for class 1 - Probability of >50K
         y_pred1 = gnb.predict_proba(X_test)[:, 1]
+        logsList.append(y_pred1)
         #41--------------------------
         #42--------------------------
         for line in logsList:
