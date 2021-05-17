@@ -1,3 +1,5 @@
+![Grafana Ekran Görüntüsü](https://github.com/ynsemrearslan/python_naive_bayes_model/blob/main/ss.png?raw=true)
+
 # Python ile Naïve Bayes Sınıflandırıcı
 
 Bu projede, Bir kişinin yılda 50.000'den fazla kazanıp kazanmadığını tahmin etmek için bir Navie Bayes Sınıflandırıcı kullanıyorum.
