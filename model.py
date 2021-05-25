@@ -1,3 +1,4 @@
+from tkinter.ttk import Progressbar
 import numpy as np
 from numpy.core.fromnumeric import var # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
@@ -6,15 +7,16 @@ import seaborn as sns # for statistical data visualization
 
 import matplotlib
 matplotlib.use("TkAgg")
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
+
+
 
 train=[]
 file2 = open(r".\logs.txt","w+")
 logsList=[]
 conf_matrix=[]
 y_test_list=[]
+progressBar=[]
 
 
 def get_train_score():
@@ -26,6 +28,10 @@ def get_conf_matrix():
     return conf_matrix
 def get_y_test():
     return y_test_list
+def get_progress_bar():
+    progressBar.reverse()
+    print(progressBar[0])
+    return progressBar
 
 
 def get_loglist():
@@ -46,7 +52,8 @@ def start(test_size=0.25):
     # Hedef değişken income sütunu dataframe üzerinden silinerek X değişkenine atanıyor.
     X = df.drop(['income'], axis=1)
     print(X)
-
+    
+    progressBar.append(20)
     # Hedef değişken income sütunu dataframe üzerinden seçilerek y değişkenine atanıyor.
     y = df['income']
     print(y)
@@ -93,6 +100,8 @@ def start(test_size=0.25):
     X_train = pd.DataFrame(X_train, columns=[cols])
     X_test = pd.DataFrame(X_test, columns=[cols])
     # Naive Bayes Modeli Eğitimi
+    progressBar.append(40)
+   
     from sklearn.naive_bayes import GaussianNB
     # Model nesnesi
     gnb = GaussianNB()
@@ -112,11 +121,12 @@ def start(test_size=0.25):
         
     # Burada, y_test gerçek sınıf etiketleridir ve y_pred, test kümesindeki tahmin edilen sınıf etiketleridir.
     #Şimdi, aşırı uyumu kontrol etmek için tren seti ve test seti doğruluğunu karşılaştırma
-
+   
     y_pred_train = gnb.predict(X_train)
     y_pred_train
     logsList.append(y_pred_train)
     print('Training-set accuracy score: {0:0.4f}'. format(accuracy_score(y_train, y_pred_train)))
+    progressBar.append(60)
     
     print('Training set score: {:.4f}'.format(gnb.score(X_train, y_train)))
 
@@ -131,7 +141,7 @@ def start(test_size=0.25):
     Karışıklık matrisi, bir sınıflandırma algoritmasının performansını özetlemek için kullanılan bir araçtır.
     Bir kafa karışıklığı matrisi, bize sınıflandırma modeli performansının ve modelin ürettiği hata türlerinin net bir resmini verecektir.
     Gerçek Pozitifler (TP) - Gerçek Pozitifler, bir gözlemin belirli bir sınıfa ait olduğunu ve gözlemin aslında o sınıfa ait olduğunu tahmin ettiğimizde ortaya çıkar.
-
+    
     Gerçek Negatifler (TN) - Gerçek Negatifler, bir gözlemin belirli bir sınıfa ait olmadığını ve gözlemin aslında o sınıfa ait olmadığını tahmin ettiğimizde ortaya çıkar.
 
     Yanlış Pozitifler (FP) - Yanlış Pozitifler, bir gözlemin belirli bir sınıfa ait olduğunu, ancak gözlemin aslında o sınıfa ait olmadığını tahmin ettiğimizde ortaya çıkar. 
@@ -156,7 +166,7 @@ def start(test_size=0.25):
     print('\nFalse Negatives(FN) = ', cm[1,0])
     logsList.append('False Negatives(FN) = {0:0.4f}'.format(cm[1,0]))
 
-    
+   
     from sklearn.metrics import classification_report
 
     print(classification_report(y_test, y_pred))
@@ -167,7 +177,8 @@ def start(test_size=0.25):
     FN = cm[1,0]
     classification_accuracy = (TP + TN) / float(TP + TN + FP + FN)
     # sınıflandırma doğruluğu
-
+    progressBar.append(80)
+    print(get_progress_bar())
     print('Classification accuracy : {0:0.4f}'.format(classification_accuracy))
     logsList.append('Classification accuracy : {0:0.4f}'.format(classification_accuracy))
     classification_error = (FP + FN) / float(TP + TN + FP + FN)
@@ -217,6 +228,8 @@ def start(test_size=0.25):
     print(y_pred_prob)
     logsList.append(y_pred_prob)
     #38
+    progressBar.append(100)
+
     # dataframe içerisinde olasılıkları saklayın
     y_pred_prob_df = pd.DataFrame(data=y_pred_prob, columns=['Prob of - <=50K', 'Prob of - >50K'])
     print(y_pred_prob_df)

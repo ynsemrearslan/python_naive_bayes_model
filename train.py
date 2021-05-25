@@ -1,4 +1,5 @@
 
+
 from model import get_loglist, start
 import sys, os
 sys.path.append(os.path.abspath("../"))
@@ -26,8 +27,6 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 # Logların gösterildiği açılan pencere loglar model eğitimi sırasında logs.txt dosyasına yazılıp oradan okuma işlemleri yapılıyor.
 class LogWindow(tk.Toplevel):
-
-
     def __init__(self, master):
         super().__init__()
         i=0
@@ -38,18 +37,16 @@ class LogWindow(tk.Toplevel):
             self.lb.insert(i,line)
             i=i+1
         self.lb.pack(fill=tk.BOTH, expand=1)
-
-# Sıcaklık haritasının gösterildiği açılan pencere
-      
-# Eğitim durumu grafik halinde gösteren açılır pencere
-class PredictedWindow(tk.Toplevel):
-    def __init__(self, master,matrix):
-        super().__init__()
-        from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-
-class PredictModel(tk.Toplevel):
+class AboutWindow(tk.Toplevel):
     def __init__(self, master):
         super().__init__()
+        file1 = open("about.txt","r+")
+        self.lb = Listbox(self)
+        for line in file1.readlines():
+            self.lb.insert(i,line)
+            i=i+1
+        self.lb.pack(fill=tk.BOTH, expand=1)
+
 
 # Main sınıfımız model eğitimi ve testi bu sınıfta gerçekleşiyor
 class Model(tk.Tk):
@@ -65,28 +62,24 @@ class Model(tk.Tk):
         self.menubar = tk.Menu(self, bg="lightgrey", fg="black")
 
         self.log_menu = tk.Menu(self.menubar, tearoff=0, bg="lightgrey", fg="black")
-        self.log_menu.add_command(label="View Logs", command=self.show_log_window, accelerator="Ctrl+L")
+        self.log_menu.add_command(label="Görüntüle", command=self.show_log_window, accelerator="Ctrl+L")
 
         self.file_menu = tk.Menu(self.menubar, tearoff=0, bg="lightgrey", fg="black")
-        self.file_menu.add_command(label="Close", command=self.close, accelerator="Ctrl+W")
+        self.file_menu.add_command(label="Kapat", command=self.close, accelerator="Ctrl+W")
         
 
         self.mathplot = tk.Menu(self.menubar, tearoff=0, bg="lightgrey", fg="black")
-        self.mathplot.add_command(label="HotMap", command=self.show_graph_hotmap_window, accelerator="Ctrl+H")
-        self.mathplot.add_command(label="Predicted", command=self.show_graph_predicted_window, accelerator="Ctrl+P")
-        self.mathplot.add_command(label="ROC", command=self.show_predict_window)
-
-        self.predict_model = tk.Menu(self.menubar, tearoff=0, bg="lightgrey", fg="black")
-        self.predict_model.add_command(label="Predict", command=self.show_predict_window, accelerator="Ctrl+P")
+        self.mathplot.add_command(label="Doğruluk matrisi", command=self.show_graph_hotmap_window, accelerator="Ctrl+H")
+        self.mathplot.add_command(label="ROC", command=self.show_graph_predicted_window, accelerator="Ctrl+P")
+        self.mathplot.add_command(label="Grafik histogramı", command=self.show_predict_window)
 
         self.about_menu = tk.Menu(self.menubar, tearoff=0, bg="lightgrey", fg="black")
-        self.about_menu.add_command(label="About the model ", command=self.show_log_window, accelerator="Ctrl+L")
+        self.about_menu.add_command(label="Model hakkında ", command=self.show_about_window, accelerator="Ctrl+L")
 
-        self.menubar.add_cascade(label="File", menu=self.file_menu)
-        self.menubar.add_cascade(label="Logs", menu=self.log_menu)
-        self.menubar.add_cascade(label="Graphs", menu=self.mathplot)
-        self.menubar.add_cascade(label="Predict", menu=self.predict_model)
-        self.menubar.add_cascade(label="About", menu=self.about_menu)
+        self.menubar.add_cascade(label="Dosya", menu=self.file_menu)
+        self.menubar.add_cascade(label="Çıktılar", menu=self.log_menu)
+        self.menubar.add_cascade(label="Grafikler", menu=self.mathplot)
+        self.menubar.add_cascade(label="Hakkında", menu=self.about_menu)
 
         self.configure(menu=self.menubar)
         # Üst menü tanımlamaları bitişi
@@ -143,6 +136,9 @@ class Model(tk.Tk):
         plt.show()
     def show_log_window(self, event=None):
         LogWindow(self)
+    def show_about_window(self, event=None):
+        AboutWindow(self)
+        
     def show_graph_predicted_window(self,event=None):
         
         y_test=get_y_test()[0]
@@ -186,10 +182,25 @@ class Model(tk.Tk):
         start(test_size=int(self.task_name_entry.get())/100)
         from model import get_train_score
         from model import get_test_score
+        from model import get_progress_bar
+        
+        self.pb1['value'] += 20
+        self.update_idletasks()
+        self.pb1['value'] += 20
+        self.update_idletasks()
+        self.pb1['value'] +=20
+        self.update_idletasks()
+        self.pb1['value'] +=20
+        self.update_idletasks()
+        self.pb1['value'] +=20
+        self.update_idletasks()
         self.train_label_text.config(text=get_train_score())
+        
         self.test_label_text.config(text=get_test_score())
+        
         self.update_idletasks()      
-
+    def progress():
+        print('progress metod')
 if __name__ == "__main__":
     model = Model()
     model.mainloop()
