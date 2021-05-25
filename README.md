@@ -11,7 +11,7 @@ pip install -r requirements.txt
 ```
 ```python
 #Gereklilikler yüklendikten sonra projenin çalışırılması.
-python model
+python train
 ```
 
 ## 1. Naïve Bayes algoritması hakkında bilgi
